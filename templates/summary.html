@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Text Summarizer - EduGenie AI{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>📄 AI Text Summarizer</h1>
+  <p>Paste your notes or upload text and get a concise summary.</p>
+</div>
+
+<div class="form-card">
+  <textarea id="source-text" placeholder="Paste your study material here..."></textarea>
+  <button class="btn btn-primary btn-block" id="summarize-btn">✨ Summarize Text</button>
+</div>
+
+<div class="result-box empty" id="result">Your summary will appear here.</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const btn = document.getElementById("summarize-btn");
+const result = document.getElementById("result");
+
+btn.addEventListener("click", async () => {
+  const text = document.getElementById("source-text").value.trim();
+  if (!text) { alert("Please paste some text first"); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Summarizing...';
+  result.classList.remove("empty");
+  result.innerHTML = "Summarizing your text...";
+
+  try {
+    const data = await postJSON("/api/summary", { text });
+    result.innerHTML = renderMarkdown(data.summary);
+  } catch (e) {
+    result.innerHTML = "⚠️ " + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = "✨ Summarize Text";
+  }
+});
+</script>
+{% endblock %}

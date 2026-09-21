@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}EduGenie AI{% endblock %}</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+<nav class="navbar">
+  <div class="brand">🎓 EduGenie AI</div>
+  <div class="nav-links">
+    <a href="/signin" class="{{ 'active' if request.url.path in ['/', '/signin', '/login', '/signup', '/register'] else '' }}">Home</a>
+    <a href="/signin" class="{{ 'active' if request.url.path in ['/signin', '/login', '/signup', '/register'] else '' }}">Sign In</a>
+    {% if is_admin(request) %}
+    <a href="/users" class="{{ 'active' if request.url.path == '/users' else '' }}">Users</a>
+    {% endif %}
+    <a href="/dashboard" class="{{ 'active' if request.url.path == '/dashboard' else '' }}">Dashboard</a>
+    <a href="/ask-ai" class="{{ 'active' if request.url.path == '/ask-ai' else '' }}">Ask AI</a>
+    <a href="/quiz" class="{{ 'active' if request.url.path == '/quiz' else '' }}">Quiz</a>
+    <a href="/summary" class="{{ 'active' if request.url.path == '/summary' else '' }}">Summary</a>
+    <a href="/roadmap-page" class="{{ 'active' if request.url.path == '/roadmap-page' else '' }}">Roadmap</a>
+    <a href="/history" class="{{ 'active' if request.url.path == '/history' else '' }}">History</a>
+  </div>
+  <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+</nav>
+
+<main>
+{% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <p>🎓 EduGenie AI</p>
+  <p>AI Powered Educational Assistant</p>
+  <p>B.Tech Mini Project • 2026</p>
+</footer>
+
+<script src="/static/js/main.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

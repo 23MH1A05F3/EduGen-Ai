@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Registered Users{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Registered Users</h1>
+  <p>View registered usernames, registration time, and account status.</p>
+</div>
+
+<div class="panel" style="max-width: 900px; margin: 0 auto;">
+  <div style="display:flex; gap: 12px; align-items:center; margin-bottom: 18px; flex-wrap: wrap;">
+    <strong>{{ users|length }} registered user{{ '' if users|length == 1 else 's' }}</strong>
+    <input id="user-search" type="text" placeholder="Search by username" style="max-width: 300px; margin: 0;">
+  </div>
+
+  {% if users %}
+    <table style="width:100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <th style="text-align:left; padding: 12px 10px;">#</th>
+          <th style="text-align:left; padding: 12px 10px;">Username</th>
+          <th style="text-align:left; padding: 12px 10px;">Password</th>
+          <th style="text-align:left; padding: 12px 10px;">Registered At</th>
+          <th style="text-align:left; padding: 12px 10px;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="users-table-body">
+        {% for user in users %}
+          <tr class="user-row" data-username="{{ user.username }}" style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 12px 10px;">{{ loop.index }}</td>
+            <td style="padding: 12px 10px;">{{ user.username }}</td>
+            <td style="padding: 12px 10px;">Set (hidden)</td>
+            <td style="padding: 12px 10px;">{{ user.registered_at }}</td>
+            <td style="padding: 12px 10px;">
+              <button class="btn btn-accent delete-user-btn" data-username="{{ user.username }}" type="button">Delete</button>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="result-box empty">No users have registered yet.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const searchInput = document.getElementById('user-search');
+  const rows = [...document.querySelectorAll('.user-row')];
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (event) => {
+      const query = event.target.value.trim().toLowerCase();
+      rows.forEach((row) => {
+        const username = (row.dataset.username || '').toLowerCase();
+        const match = username.includes(query);
+        row.style.display = match ? '' : 'none';
+      });
+    });
+  }
+
+  document.querySelectorAll('.delete-user-btn').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const username = button.dataset.username;
+      if (!username) return;
+
+      const confirmed = confirm(`Delete user: ${username}?`);
+      if (!confirmed) return;
+
+      try {
+        const res = await fetch('/api/delete-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not delete user.');
+
+        button.closest('tr').remove();
+        alert(data.message || 'User deleted successfully.');
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+  });
+</script>
+{% endblock %}

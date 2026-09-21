@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Quiz Generator - EduGenie AI{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>📝 AI Quiz Generator</h1>
+  <p>Create quizzes on any topic instantly.</p>
+</div>
+
+<div class="form-card">
+  <div class="form-row cols-3">
+    <input type="text" id="topic" placeholder="Enter a topic (e.g. DevOps, Photosynthesis)">
+    <select id="difficulty">
+      <option>Easy</option>
+      <option>Medium</option>
+      <option>Hard</option>
+    </select>
+    <input type="number" id="count" value="5" min="1" max="20">
+  </div>
+  <button class="btn btn-primary btn-block" id="generate-btn">🎯 Generate Quiz</button>
+</div>
+
+<div class="result-box empty" id="result">Your generated quiz will appear here.</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const btn = document.getElementById("generate-btn");
+const result = document.getElementById("result");
+
+btn.addEventListener("click", async () => {
+  const topic = document.getElementById("topic").value.trim();
+  const difficulty = document.getElementById("difficulty").value;
+  const count = document.getElementById("count").value;
+  if (!topic) { alert("Please enter a topic"); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating...';
+  result.classList.remove("empty");
+  result.innerHTML = "Generating your quiz on <strong>" + topic + "</strong>...";
+
+  try {
+    const data = await postJSON("/api/quiz", { topic, difficulty, count });
+    result.innerHTML = renderMarkdown(data.quiz);
+  } catch (e) {
+    result.innerHTML = "⚠️ " + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = "🎯 Generate Quiz";
+  }
+});
+</script>
+{% endblock %}

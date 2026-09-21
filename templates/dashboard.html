@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - EduGenie AI{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>📊 Dashboard</h1>
+  <p>Welcome back! Here's your EduGenie activity.</p>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card"><div class="num">{{ stats.questions }}</div><div class="label">Questions Asked</div></div>
+  <div class="stat-card"><div class="num">{{ stats.quizzes }}</div><div class="label">Quizzes Generated</div></div>
+  <div class="stat-card"><div class="num">{{ stats.summaries }}</div><div class="label">Summaries Created</div></div>
+  <div class="stat-card"><div class="num">{{ stats.roadmaps }}</div><div class="label">Roadmaps Generated</div></div>
+</div>
+
+<div class="panel">
+  <h2>📈 Recent Activity</h2>
+  {% if recent %}
+    {% for item in recent %}
+    <div class="activity-item">
+      <div class="q">• {{ item.question }}</div>
+      <div class="time">{{ item.timestamp[:19].replace('T', ' ') }}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p style="color: var(--text-muted);">No activity yet. Try asking a question on the Ask AI page!</p>
+  {% endif %}
+</div>
+{% endblock %}

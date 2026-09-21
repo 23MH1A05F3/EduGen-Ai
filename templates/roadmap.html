@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Learning Roadmap - EduGenie AI{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>🗺️ AI Learning Roadmap</h1>
+  <p>Generate a personalized roadmap for any technology or subject.</p>
+</div>
+
+<div class="form-card">
+  <input type="text" id="topic" placeholder="Enter a technology or subject (e.g. DBMS, React, Machine Learning)">
+  <button class="btn btn-primary btn-block" id="generate-btn">🚀 Generate Roadmap</button>
+</div>
+
+<div class="result-box empty" id="result">Your learning roadmap will appear here.</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const btn = document.getElementById("generate-btn");
+const result = document.getElementById("result");
+
+btn.addEventListener("click", async () => {
+  const topic = document.getElementById("topic").value.trim();
+  if (!topic) { alert("Please enter a topic"); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating...';
+  result.classList.remove("empty");
+  result.innerHTML = "Building your roadmap for <strong>" + topic + "</strong>...";
+
+  try {
+    const data = await postJSON("/api/roadmap", { topic });
+    result.innerHTML = renderMarkdown(data.roadmap);
+  } catch (e) {
+    result.innerHTML = "⚠️ " + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = "🚀 Generate Roadmap";
+  }
+});
+</script>
+{% endblock %}

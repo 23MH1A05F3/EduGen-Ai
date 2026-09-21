@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Ask AI - EduGenie AI{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>🤖 Ask EduGenie AI</h1>
+  <p>Ask any educational question and get instant AI-powered answers.</p>
+</div>
+
+<div class="chat-window" id="chat-window">
+  <div class="bubble bot">
+    👋 Hello! I'm <strong>EduGenie AI</strong>.<br><br>
+    Ask me anything about programming, mathematics, science, engineering,
+    interview preparation, or any academic topic.
+  </div>
+</div>
+
+<div class="chat-input-row">
+  <input type="text" id="question-input" placeholder="Type your question here..." autocomplete="off">
+  <button class="btn btn-primary" id="ask-btn">🚀 Ask AI</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const chatWindow = document.getElementById("chat-window");
+const input = document.getElementById("question-input");
+const askBtn = document.getElementById("ask-btn");
+
+function addBubble(text, who) {
+  const div = document.createElement("div");
+  div.className = "bubble " + who;
+  div.innerHTML = who === "bot" ? renderMarkdown(text) : text;
+  chatWindow.appendChild(div);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+  return div;
+}
+
+async function ask() {
+  const question = input.value.trim();
+  if (!question) return;
+  addBubble(question, "user");
+  input.value = "";
+  askBtn.disabled = true;
+  const thinking = addBubble("<em>Thinking...</em>", "bot");
+  try {
+    const data = await postJSON("/api/ask", { question });
+    thinking.innerHTML = renderMarkdown(data.answer);
+  } catch (e) {
+    thinking.innerHTML = "⚠️ " + e.message;
+  } finally {
+    askBtn.disabled = false;
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+}
+
+askBtn.addEventListener("click", ask);
+input.addEventListener("keydown", (e) => { if (e.key === "Enter") ask(); });
+</script>
+{% endblock %}

@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}Register / Login{% endblock %}
+{% block content %}
+<div class="auth-shell">
+  <div class="auth-card">
+    <div class="auth-header">
+      <span class="badge">Member access</span>
+      <h1>Create account or sign in</h1>
+      <p>Register with a username, password, and security question.</p>
+    </div>
+
+    <div class="mode-toggle" aria-label="Authentication mode">
+      <button type="button" class="mode-btn active" id="mode-register">Register</button>
+      <button type="button" class="mode-btn" id="mode-login">Login</button>
+      <button type="button" class="mode-btn" id="mode-forgot">Forgot Password</button>
+    </div>
+
+    <form id="register-form" class="auth-form">
+      <label for="reg-username">Username</label>
+      <input id="reg-username" type="text" placeholder="Enter username" required>
+
+      <label for="security-question">Security question</label>
+      <input id="security-question" type="text" placeholder="Example: What is your pet's name?" required>
+
+      <label for="security-answer">Security answer</label>
+      <input id="security-answer" type="password" placeholder="Enter your answer" required>
+
+      <label for="reg-password">Create password</label>
+      <input id="reg-password" type="password" placeholder="Create password" required>
+
+      <button type="submit" class="btn btn-primary btn-block">Register</button>
+    </form>
+
+    <form id="login-form" class="auth-form" style="display:none;">
+      <label for="login-username">Username</label>
+      <input id="login-username" type="text" placeholder="Enter username" required>
+
+      <label for="login-password">Password</label>
+      <input id="login-password" type="password" placeholder="Enter password" required>
+
+      <button type="submit" class="btn btn-primary btn-block">Login</button>
+    </form>
+
+    <form id="forgot-form" class="auth-form" style="display:none;">
+      <label for="forgot-username">Username</label>
+      <input id="forgot-username" type="text" placeholder="Enter username" required>
+
+      <button type="button" id="show-question-btn" class="btn btn-primary btn-block">Show Security Question</button>
+
+      <div id="security-question-box" style="display:none;">
+        <label for="reset-question">Security question</label>
+        <p id="reset-question" class="result-box"></p>
+
+        <label for="reset-answer">Answer</label>
+        <input id="reset-answer" type="password" placeholder="Enter your answer" required>
+
+        <button type="button" id="verify-answer-btn" class="btn btn-primary btn-block">Verify Answer</button>
+      </div>
+
+      <label for="new-password">New password</label>
+      <input id="new-password" type="password" placeholder="Create new password" required disabled>
+
+      <label for="confirm-password">Confirm new password</label>
+      <input id="confirm-password" type="password" placeholder="Confirm new password" required disabled>
+
+      <button type="submit" id="reset-password-btn" class="btn btn-accent btn-block" disabled>Password Updated</button>
+    </form>
+
+    <div id="auth-message" class="auth-message" aria-live="polite" style="display:none;"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const registerForm = document.getElementById('register-form');
+  const loginForm = document.getElementById('login-form');
+  const forgotForm = document.getElementById('forgot-form');
+  const authMessage = document.getElementById('auth-message');
+  const registerBtn = document.getElementById('mode-register');
+  const loginBtn = document.getElementById('mode-login');
+  const forgotBtn = document.getElementById('mode-forgot');
+
+  const showMessage = (text, isError = false) => {
+    authMessage.textContent = text;
+    authMessage.style.display = 'block';
+    authMessage.style.color = isError ? '#d93025' : '#0f9d58';
+  };
+
+  const setMode = (mode) => {
+    registerBtn.classList.toggle('active', mode === 'register');
+    loginBtn.classList.toggle('active', mode === 'login');
+    forgotBtn.classList.toggle('active', mode === 'forgot');
+
+    registerForm.style.display = mode === 'register' ? 'flex' : 'none';
+    loginForm.style.display = mode === 'login' ? 'flex' : 'none';
+    forgotForm.style.display = mode === 'forgot' ? 'flex' : 'none';
+
+    if (mode === 'register') showMessage('Register with a username, password, and security question.', false);
+    if (mode === 'login') showMessage('Login with your username and password.', false);
+    if (mode === 'forgot') showMessage('Enter your username and choose a new password.', false);
+  };
+
+  registerBtn.addEventListener('click', () => setMode('register'));
+  loginBtn.addEventListener('click', () => setMode('login'));
+  forgotBtn.addEventListener('click', () => setMode('forgot'));
+
+  registerForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const username = document.getElementById('reg-username').value.trim();
+    const securityQuestion = document.getElementById('security-question').value.trim();
+    const securityAnswer = document.getElementById('security-answer').value.trim();
+    const password = document.getElementById('reg-password').value.trim();
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, security_question: securityQuestion, security_answer: securityAnswer })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Registration failed.');
+      showMessage(data.message || 'Registration successful.', false);
+      registerForm.reset();
+      setMode('login');
+    } catch (error) {
+      showMessage(error.message, true);
+    }
+  });
+
+  loginForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed.');
+      showMessage(data.message || 'Login successful.', false);
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 800);
+    } catch (error) {
+      showMessage(error.message, true);
+    }
+  });
+
+  document.getElementById('show-question-btn').addEventListener('click', async () => {
+    const username = document.getElementById('forgot-username').value.trim();
+    if (!username) {
+      showMessage('Enter your username first.', true);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/request-reset-question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not find the security question.');
+      document.getElementById('reset-question').textContent = data.question;
+      document.getElementById('security-question-box').style.display = 'block';
+      showMessage('Answer the security question to continue.', false);
+    } catch (error) {
+      showMessage(error.message, true);
+    }
+  });
+
+  document.getElementById('verify-answer-btn').addEventListener('click', async () => {
+    const username = document.getElementById('forgot-username').value.trim();
+    const answer = document.getElementById('reset-answer').value.trim();
+    try {
+      const res = await fetch('/api/verify-security-answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, answer })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Security answer verification failed.');
+      document.getElementById('reset-password-btn').disabled = false;
+      document.getElementById('new-password').disabled = false;
+      document.getElementById('confirm-password').disabled = false;
+      showMessage(data.message, false);
+    } catch (error) {
+      showMessage(error.message, true);
+    }
+  });
+
+  forgotForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const username = document.getElementById('forgot-username').value.trim();
+    const newPassword = document.getElementById('new-password').value.trim();
+    const confirmPassword = document.getElementById('confirm-password').value.trim();
+
+    try {
+      const res = await fetch('/api/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, new_password: newPassword, confirm_password: confirmPassword })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Password reset failed.');
+      showMessage(data.message || 'Password reset successful.', false);
+      forgotForm.reset();
+      setMode('login');
+    } catch (error) {
+      showMessage(error.message, true);
+    }
+  });
+
+  setMode('register');
+</script>
+{% endblock %}

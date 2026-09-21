@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}History - EduGenie AI{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>🕐 Chat History</h1>
+  <p>Your previous conversations with EduGenie AI.</p>
+</div>
+
+<button class="btn btn-danger" id="clear-btn">🗑️ Clear History</button>
+<div style="height: 24px;"></div>
+
+<div id="history-list">
+{% if items %}
+  {% for item in items %}
+  <div class="history-item">
+    <h3>❓ {{ item.question }}</h3>
+    <div>{{ item.answer_html | safe if item.answer_html else item.answer }}</div>
+    <div class="time">{{ item.timestamp[:19].replace('T', ' ') }}</div>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="empty-state">No conversations yet. Go ask EduGenie something! 🤖</div>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll(".history-item div:nth-child(2)").forEach((el) => {
+  el.innerHTML = renderMarkdown(el.textContent);
+});
+
+document.getElementById("clear-btn").addEventListener("click", async () => {
+  if (!confirm("Clear all chat history?")) return;
+  await postJSON("/api/clear-history", {});
+  document.getElementById("history-list").innerHTML =
+    '<div class="empty-state">No conversations yet. Go ask EduGenie something! 🤖</div>';
+});
+</script>
+{% endblock %}
