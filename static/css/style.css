@@ -349,6 +349,22 @@ textarea { resize: vertical; min-height: 140px; }
 .result-box h1, .result-box h2, .result-box h3 { color: var(--primary); }
 .result-box hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
 .result-box.empty { color: var(--text-muted); text-align: center; }
+.file-upload-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.file-upload-row input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.file-upload-btn { margin: 0; }
+.file-name { color: var(--text-muted); font-size: 0.9rem; overflow-wrap: anywhere; }
+.quiz-form { display: flex; flex-direction: column; gap: 22px; }
+.quiz-question { border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 0; }
+.quiz-question legend { font-weight: 800; padding: 0 8px; }
+.quiz-options { display: grid; gap: 10px; margin-top: 14px; }
+.quiz-option { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; }
+.quiz-option:hover { border-color: var(--primary); }
+.quiz-option input { accent-color: var(--primary); margin-top: 4px; }
+.quiz-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.quiz-actions .btn:disabled { cursor: not-allowed; opacity: 0.5; transform: none; }
+.quiz-score { padding: 16px; border-radius: 10px; background: rgba(23, 183, 194, 0.1); color: var(--text); font-size: 1.15rem; font-weight: 800; text-align: center; }
+.quiz-explanation { margin-top: 16px; padding: 14px; border-left: 4px solid var(--accent); background: rgba(23, 183, 194, 0.08); }
+.quiz-explanation p { margin: 6px 0 0; }
 .spinner {
   display: inline-block;
   width: 18px; height: 18px;

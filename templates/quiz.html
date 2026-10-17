@@ -26,6 +26,70 @@
 <script>
 const btn = document.getElementById("generate-btn");
 const result = document.getElementById("result");
+let currentQuestions = [];
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function renderQuiz(questions) {
+  currentQuestions = questions;
+  result.classList.remove("empty");
+  result.innerHTML = `
+    <form id="quiz-form" class="quiz-form">
+      ${questions.map((item, index) => `
+        <fieldset class="quiz-question">
+          <legend>${index + 1}. ${escapeHtml(item.question)}</legend>
+          <div class="quiz-options">
+            ${Object.entries(item.options).map(([letter, option]) => `
+              <label class="quiz-option">
+                <input type="radio" name="question-${index}" value="${letter}">
+                <span><strong>${letter})</strong> ${escapeHtml(option)}</span>
+              </label>
+            `).join("")}
+          </div>
+          <div class="quiz-explanation" id="explanation-${index}" hidden>
+            <strong>Correct answer: ${escapeHtml(item.answer)}) ${escapeHtml(item.answer_text)}</strong>
+            <p>${escapeHtml(item.explanation)}</p>
+          </div>
+        </fieldset>
+      `).join("")}
+      <div class="quiz-actions">
+        <button class="btn btn-primary" type="submit">✅ Submit Answers</button>
+        <button class="btn btn-accent" type="button" id="explanation-btn" disabled>💡 Show Explanations</button>
+      </div>
+      <div class="quiz-score" id="quiz-score" hidden></div>
+    </form>`;
+
+  const form = document.getElementById("quiz-form");
+  const explanationBtn = document.getElementById("explanation-btn");
+  const score = document.getElementById("quiz-score");
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    let correct = 0;
+    currentQuestions.forEach((item, index) => {
+      const selected = form.querySelector(`input[name="question-${index}"]:checked`);
+      if (selected && selected.value === item.answer) correct += 1;
+    });
+    score.textContent = `Your score: ${correct} / ${currentQuestions.length}`;
+    score.hidden = false;
+    explanationBtn.disabled = false;
+  });
+
+  explanationBtn.addEventListener("click", () => {
+    currentQuestions.forEach((_, index) => {
+      document.getElementById(`explanation-${index}`).hidden = false;
+    });
+    explanationBtn.disabled = true;
+    explanationBtn.textContent = "💡 Explanations Shown";
+  });
+}
 
 btn.addEventListener("click", async () => {
   const topic = document.getElementById("topic").value.trim();
@@ -40,7 +104,11 @@ btn.addEventListener("click", async () => {
 
   try {
     const data = await postJSON("/api/quiz", { topic, difficulty, count });
-    result.innerHTML = renderMarkdown(data.quiz);
+    if (!data.questions || !data.questions.length) {
+      result.innerHTML = renderMarkdown(data.quiz);
+      return;
+    }
+    renderQuiz(data.questions);
   } catch (e) {
     result.innerHTML = "⚠️ " + e.message;
   } finally {

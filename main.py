@@ -386,7 +386,7 @@ async def api_quiz(request: Request):
         }
     )
     save_data(data)
-    return {"quiz": quiz}
+    return {"quiz": quiz, "questions": ai_service.parse_quiz(quiz)}
 
 
 @app.post("/api/summary")

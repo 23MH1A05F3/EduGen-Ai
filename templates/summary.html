@@ -7,6 +7,11 @@
 </div>
 
 <div class="form-card">
+  <div class="file-upload-row">
+    <label class="btn btn-accent file-upload-btn" for="source-file">📎 Upload File</label>
+    <input type="file" id="source-file" accept=".txt,.md,.csv,.pdf,application/pdf,text/plain,text/markdown,text/csv">
+    <span id="file-name" class="file-name">No file selected</span>
+  </div>
   <textarea id="source-text" placeholder="Paste your study material here..."></textarea>
   <button class="btn btn-primary btn-block" id="summarize-btn">✨ Summarize Text</button>
 </div>
@@ -18,10 +23,47 @@
 <script>
 const btn = document.getElementById("summarize-btn");
 const result = document.getElementById("result");
+const sourceText = document.getElementById("source-text");
+const sourceFile = document.getElementById("source-file");
+const fileName = document.getElementById("file-name");
+
+sourceFile.addEventListener("change", async () => {
+  const file = sourceFile.files[0];
+  if (!file) {
+    fileName.textContent = "No file selected";
+    return;
+  }
+
+  try {
+    if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+      sourceText.value = await extractPdfText(file);
+    } else {
+      sourceText.value = await file.text();
+    }
+    fileName.textContent = file.name;
+  } catch (e) {
+    sourceText.value = "";
+    fileName.textContent = "Could not read file";
+    alert("Unable to read this file. Please choose a text file.");
+  }
+});
+
+async function extractPdfText(file) {
+  const pdfjsLib = await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs";
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const pages = [];
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+    pages.push(content.items.map((item) => item.str).join(" "));
+  }
+  return pages.join("\n\n");
+}
 
 btn.addEventListener("click", async () => {
-  const text = document.getElementById("source-text").value.trim();
-  if (!text) { alert("Please paste some text first"); return; }
+  const text = sourceText.value.trim();
+  if (!text) { alert("Please paste text or upload a file first"); return; }
 
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Summarizing...';

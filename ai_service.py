@@ -1,5 +1,6 @@
 
 import os
+import re
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -80,6 +81,43 @@ def generate_quiz(topic: str, difficulty: str, count: int) -> str:
         "then a '### Quiz Time!' heading, then the questions."
     )
     return _generate(prompt)
+
+
+def parse_quiz(text: str) -> list[dict]:
+    questions = []
+    heading_pattern = re.compile(r"^\s*\*\*(\d+)\.\s*(.+?)\*\*\s*$", re.MULTILINE)
+    option_pattern = re.compile(r"^\s*([A-D])\)\s*(.+?)\s*$", re.MULTILINE)
+    headings = list(heading_pattern.finditer(text))
+
+    for index, heading in enumerate(headings):
+        section_end = headings[index + 1].start() if index + 1 < len(headings) else len(text)
+        section = text[heading.end():section_end]
+        correct_match = re.search(
+            r"\*\*Correct Answer:\*\*\s*([A-D])\)\s*(.+?)(?=\n|$)",
+            section,
+            re.IGNORECASE,
+        )
+        explanation_match = re.search(
+            r"\*\*Explanation:\*\*\s*(.+?)(?=\n\s*---|$)",
+            section,
+            re.IGNORECASE | re.DOTALL,
+        )
+        if not correct_match or not explanation_match:
+            continue
+        options = {letter.upper(): option.strip() for letter, option in option_pattern.findall(section)}
+        if len(options) < 2:
+            continue
+        correct_letter = correct_match.group(1).upper()
+        questions.append(
+            {
+                "question": heading.group(2).strip(),
+                "options": options,
+                "answer": correct_letter,
+                "answer_text": correct_match.group(2).strip(),
+                "explanation": explanation_match.group(1).strip(),
+            }
+        )
+    return questions
 
 
 def summarize_text(text: str) -> str:
